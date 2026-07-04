@@ -171,9 +171,88 @@
     h1 { font-size: 24px; }
     .qa-a { padding-left: 24px; }
   }
+
+  /* ---- 合言葉ゲート ---- */
+  body.locked .wrap { display: none; }
+  .gate {
+    display: none;
+    min-height: 100vh;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  body.locked .gate { display: flex; }
+  .gate-card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 44px 36px;
+    max-width: 400px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 12px 40px rgba(140, 110, 85, 0.08);
+  }
+  .gate-mark {
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    background: var(--accent-soft);
+    display: grid; place-items: center;
+    margin: 0 auto 18px;
+    font-size: 22px;
+  }
+  .gate-title { font-size: 18px; font-weight: 700; letter-spacing: 0.04em; }
+  .gate-msg { font-size: 13px; color: var(--text-soft); margin-top: 12px; line-height: 1.8; }
+  .gate-input {
+    width: 100%;
+    font-family: inherit;
+    font-size: 15px;
+    text-align: center;
+    color: var(--text);
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 13px 20px;
+    margin-top: 22px;
+    outline: none;
+  }
+  .gate-input:focus { border-color: var(--accent); }
+  .gate-btn {
+    width: 100%;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: #fff;
+    background: var(--accent);
+    border: none;
+    border-radius: 999px;
+    padding: 13px 20px;
+    margin-top: 14px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .gate-btn:hover { opacity: 0.85; }
+  .gate-error {
+    font-size: 12px;
+    color: #C0655A;
+    margin-top: 12px;
+    min-height: 1.5em;
+  }
 </style>
 </head>
 <body>
+
+<div class="gate" id="gate">
+  <div class="gate-card">
+    <div class="gate-mark">🔑</div>
+    <p class="gate-title">合言葉を入力してください</p>
+    <p class="gate-msg" id="gate-msg"></p>
+    <input type="password" class="gate-input" id="gate-input" placeholder="合言葉">
+    <button class="gate-btn" id="gate-btn">ひらく</button>
+    <p class="gate-error" id="gate-error"></p>
+  </div>
+</div>
+
 <div class="wrap">
 
   <header>
@@ -197,6 +276,29 @@
 
 <script src="data.js"></script>
 <script>
+  // ---- 合言葉ゲート（簡易ロック・data.jsのGATEで設定） ----
+  const gateInput = document.getElementById("gate-input");
+  const gateError = document.getElementById("gate-error");
+  document.getElementById("gate-msg").textContent = GATE.message;
+
+  function unlocked() {
+    return localStorage.getItem("qa_gate") === GATE.password;
+  }
+  function tryUnlock() {
+    if (gateInput.value.trim() === GATE.password) {
+      localStorage.setItem("qa_gate", GATE.password);
+      document.body.classList.remove("locked");
+      render();
+    } else {
+      gateError.textContent = "合言葉がちがうようです。もう一度お試しくださいね。";
+      gateInput.value = "";
+      gateInput.focus();
+    }
+  }
+  document.getElementById("gate-btn").addEventListener("click", tryUnlock);
+  gateInput.addEventListener("keydown", e => { if (e.key === "Enter") tryUnlock(); });
+  if (!unlocked()) document.body.classList.add("locked");
+
   // ---- データの流し込み（data.js を編集すれば反映されます） ----
   const catLabel = id => (CATEGORIES.find(c => c.id === id) || {}).label || "";
   const sourceLabel = id => SOURCES[id] || "";
